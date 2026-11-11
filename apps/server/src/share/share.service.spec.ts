@@ -1,7 +1,9 @@
 import { UnprocessableEntityException } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AiService } from '../ai/ai.service.js';
+import { CompaniesService } from '../companies/companies.service.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
+import { createTestFiles } from '../files/testing.js';
 import type { ImportResult, ImportService } from '../importers/import.service.js';
 import type { JobDraft } from '../importers/job-draft.js';
 import { HuntsService } from '../hunts/hunts.service.js';
@@ -24,8 +26,9 @@ describe('ShareService', () => {
 
   beforeEach(async () => {
     database = await createTestDatabase();
-    const hunts = new HuntsService(database.db);
-    jobs = new JobsService(database.db, hunts);
+    const files = createTestFiles(database.db);
+    const hunts = new HuntsService(database.db, files);
+    jobs = new JobsService(database.db, hunts, files, new CompaniesService(database.db));
     importer.import.mockReset();
     ai.getPublicSettings.mockReset().mockResolvedValue({ configured: false });
     share = new ShareService(

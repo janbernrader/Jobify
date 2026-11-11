@@ -1,8 +1,9 @@
 import { ClipboardPaste, Link2, Sparkles } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useAiSettings, useImportJob, useImportSites } from '../api/hooks';
 import type { ImportRequest, ImportResult } from '../api/types';
 import { cn } from '../lib/cn';
+import type { SharedPosting } from '../lib/sharedPosting';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { Alert, errorText } from './ui/feedback';
@@ -10,27 +11,46 @@ import { Checkbox, Input, Textarea } from './ui/fields';
 
 type Mode = 'url' | 'paste';
 
-export function ImportPanel({ onImported }: { onImported: (result: ImportResult) => void }) {
-  const [mode, setMode] = useState<Mode>('url');
-  const [url, setUrl] = useState('');
-  const [pasted, setPasted] = useState('');
+export function ImportPanel({
+  shared,
+  onImported,
+}: {
+  /** A posting handed over by the share sheet, which is imported on arrival. */
+  shared?: SharedPosting;
+  onImported: (result: ImportResult) => void;
+}) {
+  const [mode, setMode] = useState<Mode>(shared?.url || !shared?.text ? 'url' : 'paste');
+  const [url, setUrl] = useState(shared?.url ?? '');
+  const [pasted, setPasted] = useState(shared?.text ?? '');
   const [useAi, setUseAi] = useState(false);
   const importJob = useImportJob();
   const { data: sites } = useImportSites();
   const { data: ai } = useAiSettings();
 
+  const run = (request: ImportRequest) => importJob.mutate(request, { onSuccess: onImported });
+
+  // A shared link is imported without waiting to be asked: arriving from the share sheet is
+  // already the instruction. Shared text is left in the box, since reading it needs AI.
+  const autoImported = useRef(false);
+  useEffect(() => {
+    if (autoImported.current || !shared?.url) return;
+    autoImported.current = true;
+    run({ url: shared.url });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once, for the shared link
+  }, [shared?.url]);
+
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(pasted);
-    const request: ImportRequest =
+    run(
       mode === 'url'
         ? { url, useAi }
         : {
             url: url || undefined,
             useAi,
             ...(looksLikeHtml ? { html: pasted } : { text: pasted }),
-          };
-    importJob.mutate(request, { onSuccess: onImported });
+          },
+    );
   };
 
   return (

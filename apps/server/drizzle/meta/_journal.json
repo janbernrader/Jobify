@@ -50,6 +50,13 @@
       "when": 1792631650014,
       "tag": "0006_job_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794379522174,
+      "tag": "0007_api_tokens",
+      "breakpoints": true
     }
   ]
 }

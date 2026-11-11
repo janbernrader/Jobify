@@ -6,6 +6,8 @@ import {
   type ExecutionContext,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ApiTokensService } from './api-tokens.service.js';
+import { readBearerToken } from './bearer-token.js';
 import { ADMIN_ONLY, IS_PUBLIC, type AuthenticatedRequest } from './decorators.js';
 import { readSessionCookie } from './session-cookie.js';
 import { SessionsService } from './sessions.service.js';
@@ -15,6 +17,7 @@ import { SessionsService } from './sessions.service.js';
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly sessions: SessionsService,
+    private readonly tokens: ApiTokensService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -23,16 +26,21 @@ export class AuthGuard implements CanActivate {
     if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, targets)) return true;
 
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const token = readSessionCookie(request);
-    const user = await this.sessions.findUser(token);
-    if (!user || !token) throw new UnauthorizedException('Sign in required');
+    // A personal access token stands in for a session where a cookie cannot go: the iOS
+    // shortcut that shares a posting, scripts, anything outside a browser.
+    const bearer = readBearerToken(request);
+    const sessionToken = bearer ? undefined : readSessionCookie(request);
+    const user = bearer
+      ? await this.tokens.findUser(bearer)
+      : await this.sessions.findUser(sessionToken);
+    if (!user) throw new UnauthorizedException('Sign in required');
 
     if (this.reflector.getAllAndOverride<boolean>(ADMIN_ONLY, targets) && user.role !== 'admin') {
       throw new ForbiddenException('Only admins can do that');
     }
 
     request.user = user;
-    request.sessionToken = token;
+    request.sessionToken = sessionToken;
     return true;
   }
 }

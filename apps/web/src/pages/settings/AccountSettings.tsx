@@ -12,6 +12,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Alert, errorText } from '../../components/ui/feedback';
 import { Field, Input, Textarea } from '../../components/ui/fields';
+import { ShareCard } from './ShareCard';
 
 export function AccountSettings() {
   const profile = useProfile();
@@ -20,6 +21,7 @@ export function AccountSettings() {
       <AccountCard />
       <PasswordCard />
       {profile.data && <ProfileCard profile={profile.data} />}
+      <ShareCard />
     </div>
   );
 }

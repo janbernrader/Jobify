@@ -11,7 +11,8 @@ export const Public = () => SetMetadata(IS_PUBLIC, true);
 /** Restricts a route to admins. */
 export const AdminOnly = () => SetMetadata(ADMIN_ONLY, true);
 
-export type AuthenticatedRequest = Request & { user: PublicUser; sessionToken: string };
+/** `sessionToken` is unset when the request signed in with a personal access token instead. */
+export type AuthenticatedRequest = Request & { user: PublicUser; sessionToken?: string };
 
 /** The signed-in user, as resolved by AuthGuard. */
 export const CurrentUser = createParamDecorator(

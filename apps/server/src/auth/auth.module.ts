@@ -4,6 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AccountController } from '../users/account.controller.js';
 import { UsersController } from '../users/users.controller.js';
 import { UsersService } from '../users/users.service.js';
+import { ApiTokensService } from './api-tokens.service.js';
 import { AuthController } from './auth.controller.js';
 import { AuthGuard } from './auth.guard.js';
 import { AuthService } from './auth.service.js';
@@ -18,9 +19,10 @@ import { SessionsService } from './sessions.service.js';
   providers: [
     AuthService,
     SessionsService,
+    ApiTokensService,
     UsersService,
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
-  exports: [UsersService, SessionsService],
+  exports: [UsersService, SessionsService, ApiTokensService],
 })
 export class AuthModule {}

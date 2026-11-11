@@ -8,6 +8,7 @@ import type {
   AiSettingsInput,
   AiTask,
   AiTestInput,
+  ApiToken,
   AuthStatus,
   ChatMessage,
   EventInput,
@@ -21,6 +22,7 @@ import type {
   JobInput,
   JobQuery,
   JobSummary,
+  NewApiToken,
   Preferences,
   Profile,
   ResumeUpload,
@@ -58,6 +60,7 @@ export const queryKeys = {
   jobChat: (jobId: number) => ['ai', 'chat', jobId] as const,
   profile: ['profile'] as const,
   preferences: ['preferences'] as const,
+  apiTokens: ['account', 'tokens'] as const,
   importSites: ['import', 'sites'] as const,
   auth: ['auth'] as const,
   health: ['health'] as const,
@@ -534,6 +537,30 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: (profile: Partial<Profile>) => api.put<Profile>('/account/profile', profile),
     onSuccess: (profile) => queryClient.setQueryData(queryKeys.profile, profile),
+  });
+}
+
+export function useApiTokens() {
+  return useQuery({
+    queryKey: queryKeys.apiTokens,
+    queryFn: () => api.get<ApiToken[]>('/account/tokens'),
+  });
+}
+
+/** Creates a token. Its secret is in the response and nowhere else, so the caller must show it. */
+export function useCreateApiToken() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => api.post<NewApiToken>('/account/tokens', { name }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.apiTokens }),
+  });
+}
+
+export function useRevokeApiToken() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/account/tokens/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.apiTokens }),
   });
 }
 

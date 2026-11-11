@@ -9,6 +9,7 @@ import { and, asc, desc, eq, getTableColumns, inArray, like, or, sql, type SQL }
 import { today } from '../common/dates.js';
 import { DATABASE, type Database, type Executor } from '../database/database.module.js';
 import { jobEvents, jobHunts, jobs, type Job, type JobEvent } from '../database/schema.js';
+import { FilesService } from '../files/files.service.js';
 import { HuntsService } from '../hunts/hunts.service.js';
 import type { JobStatus } from './job.constants.js';
 import type { CreateJobDto } from './dto/create-job.dto.js';
@@ -64,6 +65,7 @@ export class JobsService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     private readonly hunts: HuntsService,
+    private readonly files: FilesService,
   ) {}
 
   async list(userId: number, query: QueryJobsDto): Promise<JobSummary[]> {
@@ -269,6 +271,9 @@ export class JobsService {
   }
 
   async remove(userId: number, id: number): Promise<void> {
+    await this.assertOwned(userId, id);
+    // Before the job: its attachment rows cascade away, taking their paths with them.
+    await this.files.removeForJobs([id]);
     const deleted = await this.db
       .delete(jobs)
       .where(JobsService.owned(userId, id))

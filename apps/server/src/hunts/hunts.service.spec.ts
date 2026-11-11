@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { today } from '../common/dates.js';
 import { jobs } from '../database/schema.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
+import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from './hunts.service.js';
 
 describe('HuntsService', () => {
@@ -14,7 +15,7 @@ describe('HuntsService', () => {
 
   beforeEach(async () => {
     database = await createTestDatabase();
-    hunts = new HuntsService(database.db);
+    hunts = new HuntsService(database.db, createTestFiles(database.db));
     alice = await database.createUser('alice');
     bob = await database.createUser('bob');
   });

@@ -10,6 +10,7 @@ import {
 import { and, count, desc, eq, isNotNull, isNull, min, sql } from 'drizzle-orm';
 import { today } from '../common/dates.js';
 import { DATABASE, type Database, type Executor } from '../database/database.module.js';
+import { FilesService } from '../files/files.service.js';
 import { jobHunts, jobs, type JobHunt } from '../database/schema.js';
 import type { CreateHuntDto, UpdateHuntDto } from './hunt.dto.js';
 
@@ -30,7 +31,10 @@ const NEWEST_FIRST = [
 export class HuntsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(HuntsService.name);
 
-  constructor(@Inject(DATABASE) private readonly db: Database) {}
+  constructor(
+    @Inject(DATABASE) private readonly db: Database,
+    private readonly files: FilesService,
+  ) {}
 
   /** Upgrades from versions without hunts: gives every existing job a hunt. */
   async onApplicationBootstrap(): Promise<void> {
@@ -121,8 +125,9 @@ export class HuntsService implements OnApplicationBootstrap {
     return hunt;
   }
 
-  /** Deletes a hunt together with its jobs (ON DELETE CASCADE). */
+  /** Deletes a hunt together with its jobs (ON DELETE CASCADE) and their files. */
   async remove(userId: number, id: number): Promise<void> {
+    await this.files.removeForHunt(userId, id);
     const deleted = await this.db
       .delete(jobHunts)
       .where(and(eq(jobHunts.id, id), eq(jobHunts.userId, userId)))

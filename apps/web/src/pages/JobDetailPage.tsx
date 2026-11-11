@@ -23,6 +23,7 @@ import { JOB_STATUSES, type Job, type JobStatus } from '../api/types';
 import { AiPanel } from '../components/AiPanel';
 import { Detail } from '../components/Detail';
 import { InterestRating } from '../components/InterestRating';
+import { JobFiles } from '../components/JobFiles';
 import { Markdown } from '../components/Markdown';
 import { Timeline } from '../components/Timeline';
 import { Button, ButtonLink } from '../components/ui/Button';
@@ -114,6 +115,17 @@ export function JobDetailPage() {
               )}
             </div>
           </Card>
+          <JobFiles
+            job={job}
+            saving={updateJob.isPending}
+            onUseText={(kind, text) =>
+              update(
+                kind === 'resume'
+                  ? { profile: { ...job.profile, resume: text } }
+                  : { coverLetter: text },
+              )
+            }
+          />
         </div>
 
         <div className="flex flex-col gap-6">

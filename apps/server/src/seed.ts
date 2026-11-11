@@ -15,6 +15,7 @@ import { and, eq } from 'drizzle-orm';
 import { loadConfig } from './config/configuration.js';
 import { openDatabase, type Database } from './database/database.js';
 import { jobEvents, jobHunts, jobs, users } from './database/schema.js';
+import { FilesService } from './files/files.service.js';
 import { HuntsService } from './hunts/hunts.service.js';
 import type { JobStatus } from './jobs/job.constants.js';
 
@@ -346,7 +347,8 @@ async function remove(db: Database, userId: number): Promise<number> {
 }
 
 async function seed(db: Database, userId: number): Promise<number> {
-  const current = await new HuntsService(db).forNewJob(userId);
+  const hunts = new HuntsService(db, new FilesService(db, loadConfig()));
+  const current = await hunts.forNewJob(userId);
   const count = await seedHunt(db, userId, current, POSTINGS, 0, Date.now());
 
   // An earlier search that ended with an accepted offer, to show what a finished hunt looks like.

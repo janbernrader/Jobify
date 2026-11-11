@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ATTACHMENT_MAX_BYTES } from '../files/file.constants.js';
 
 /** Absolute path of the server package (apps/server), independent of the working directory. */
 export const SERVER_ROOT = path.resolve(fileURLToPath(import.meta.url), '../../..');
@@ -29,15 +30,21 @@ export interface AppConfig {
     baseUrl: string | undefined;
     apiKey: string | undefined;
   };
+  files: {
+    /** Where uploaded files are kept, inside the data directory. */
+    dir: string;
+    maxBytes: number;
+  };
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
+  const dataDir = path.resolve(env.DATA_DIR ?? path.join(SERVER_ROOT, 'data'));
   return {
     version: env.JOBIFY_VERSION || 'dev',
     port: Number(env.PORT ?? 3000),
     logLevel: env.LOG_LEVEL || 'log',
     host: env.HOST ?? '0.0.0.0',
-    dataDir: path.resolve(env.DATA_DIR ?? path.join(SERVER_ROOT, 'data')),
+    dataDir,
     staticDir: path.resolve(env.STATIC_DIR ?? path.join(SERVER_ROOT, '../web/dist')),
     legacyPassword: env.JOBIFY_PASSWORD || undefined,
     ai: {
@@ -49,6 +56,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     search: {
       baseUrl: env.JOBSPY_URL || undefined,
       apiKey: env.JOBSPY_API_KEY || undefined,
+    },
+    files: {
+      dir: path.join(dataDir, 'files'),
+      maxBytes: Number(env.FILE_MAX_BYTES ?? ATTACHMENT_MAX_BYTES),
     },
   };
 }

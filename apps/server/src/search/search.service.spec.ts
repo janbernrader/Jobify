@@ -2,6 +2,7 @@ import { BadGatewayException, BadRequestException, HttpException } from '@nestjs
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppConfig } from '../config/configuration.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
+import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
 import { JobsService } from '../jobs/jobs.service.js';
 import { SettingsService } from '../settings/settings.service.js';
@@ -57,9 +58,9 @@ describe('SearchService', () => {
 
   beforeEach(async () => {
     database = await createTestDatabase();
-    const hunts = new HuntsService(database.db);
+    const hunts = new HuntsService(database.db, createTestFiles(database.db));
     const settings = new SettingsService(database.db);
-    jobs = new JobsService(database.db, hunts);
+    jobs = new JobsService(database.db, hunts, createTestFiles(database.db));
     users = new UsersService(database.db, settings, hunts);
     service = new SearchService(config, settings, jobs, users, ai);
     alice = await database.createUser('alice', 'admin');

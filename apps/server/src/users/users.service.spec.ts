@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { jobHunts, jobs } from '../database/schema.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
+import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
 import { SettingsService } from '../settings/settings.service.js';
 import { plainToInstance } from 'class-transformer';
@@ -17,7 +18,11 @@ describe('UsersService', () => {
   beforeEach(async () => {
     database = await createTestDatabase();
     settings = new SettingsService(database.db);
-    users = new UsersService(database.db, settings, new HuntsService(database.db));
+    users = new UsersService(
+      database.db,
+      settings,
+      new HuntsService(database.db, createTestFiles(database.db)),
+    );
   });
 
   afterEach(() => database.client.close());

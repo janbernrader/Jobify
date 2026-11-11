@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
+import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
 import { JobsService } from '../jobs/jobs.service.js';
 import { defaultTagColor } from './tag.constants.js';
@@ -14,7 +15,11 @@ describe('TagsService', () => {
 
   beforeEach(async () => {
     database = await createTestDatabase();
-    jobs = new JobsService(database.db, new HuntsService(database.db));
+    jobs = new JobsService(
+      database.db,
+      new HuntsService(database.db, createTestFiles(database.db)),
+      createTestFiles(database.db),
+    );
     tags = new TagsService(database.db);
     alice = await database.createUser('alice');
     bob = await database.createUser('bob');

@@ -8,6 +8,8 @@ import type {
   AiSettingsInput,
   AiTask,
   AiTestInput,
+  Attachment,
+  AttachmentKind,
   AuthStatus,
   ChatMessage,
   EventInput,
@@ -59,6 +61,7 @@ export const queryKeys = {
   profile: ['profile'] as const,
   preferences: ['preferences'] as const,
   importSites: ['import', 'sites'] as const,
+  jobFiles: (jobId: number) => ['jobs', jobId, 'files'] as const,
   auth: ['auth'] as const,
   health: ['health'] as const,
   users: ['users'] as const,
@@ -391,6 +394,55 @@ export function useDeleteEvent(jobId: number) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       void queryClient.invalidateQueries({ queryKey: queryKeys.stats });
     },
+  });
+}
+
+export function useJobFiles(jobId: number) {
+  return useQuery({
+    queryKey: queryKeys.jobFiles(jobId),
+    queryFn: () => api.get<Attachment[]>(`/jobs/${jobId}/files`),
+  });
+}
+
+export function useUploadFile(jobId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, kind }: { file: File; kind: AttachmentKind }) => {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('kind', kind);
+      return api.upload<Attachment>(`/jobs/${jobId}/files`, form);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobFiles(jobId) }),
+  });
+}
+
+export function useUpdateFile(jobId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      changes,
+    }: {
+      id: number;
+      changes: Partial<Pick<Attachment, 'name' | 'kind'>>;
+    }) => api.patch<Attachment>(`/files/${id}`, changes),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobFiles(jobId) }),
+  });
+}
+
+export function useDeleteFile(jobId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/files/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.jobFiles(jobId) }),
+  });
+}
+
+/** Reads a stored file's text, for the resume and cover letter fields. Nothing is saved. */
+export function useFileText() {
+  return useMutation({
+    mutationFn: (id: number) => api.post<ResumeUpload>(`/files/${id}/text`),
   });
 }
 

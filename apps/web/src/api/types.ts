@@ -472,6 +472,33 @@ export interface ResumeUpload {
   truncated: boolean;
 }
 
+/** Mirrors `files/file.constants.ts` on the server. */
+export const ATTACHMENT_KINDS = ['resume', 'cover_letter', 'posting', 'offer', 'other'] as const;
+export type AttachmentKind = (typeof ATTACHMENT_KINDS)[number];
+
+export const ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024;
+/** Narrows the file picker; the server decides what a file is by its name, not this list. */
+export const ATTACHMENT_ACCEPT = '.pdf,.doc,.docx,.odt,.rtf,.txt,.md,.png,.jpg,.jpeg,.gif,.webp';
+
+/** A file stored against a job. The path on disk never leaves the server. */
+export interface Attachment {
+  id: number;
+  jobId: number | null;
+  kind: AttachmentKind;
+  name: string;
+  contentType: string;
+  size: number;
+  sha256: string;
+  /** Whether the browser may show it in place rather than download it. */
+  inline: boolean;
+  createdAt: string;
+}
+
+/** Where the bytes are served from. Only the owner's own session can fetch it. */
+export function attachmentUrl(id: number): string {
+  return `/api/files/${id}/content`;
+}
+
 /** Dashboard cards in their default order. Mirrors `users/preferences.ts` on the server. */
 export const DASHBOARD_CARDS = [
   'active',

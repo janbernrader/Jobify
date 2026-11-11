@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useMemo, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { useCreateJob, usePreferences, useViewedHunt } from '../api/hooks';
 import type { JobDraft, JobInput } from '../api/types';
 import { DuplicateJobDialog, duplicatesFromError } from '../components/DuplicateJobDialog';
@@ -7,6 +7,7 @@ import { ImportPanel } from '../components/ImportPanel';
 import { JobForm } from '../components/JobForm';
 import { PageHeader } from '../components/PageHeader';
 import { errorText } from '../components/ui/feedback';
+import { sharedPosting } from '../lib/sharedPosting';
 
 export function NewJobPage() {
   const navigate = useNavigate();
@@ -15,8 +16,13 @@ export function NewJobPage() {
   const { hunt } = useViewedHunt();
   // The Find jobs page hands over the posting to review through the router state.
   const handed = (useLocation().state as { draft?: JobDraft } | null)?.draft;
+  // The share sheet (and the iOS shortcut) hands one over in the query string instead.
+  const [params] = useSearchParams();
+  const shared = useMemo(() => sharedPosting(params), [params]);
   const [draft, setDraft] = useState<{ values: JobDraft; version: number }>({
-    values: handed ?? {},
+    // What was shared fills the form straight away, so a posting that cannot be imported —
+    // a login wall, a dead link — is still one tap from saved.
+    values: handed ?? { title: shared?.title, url: shared?.url, description: shared?.text },
     version: 0,
   });
   // Only for jobs added by hand or from a posting that names no currency of its own.
@@ -43,6 +49,7 @@ export function NewJobPage() {
       />
       <div className="flex flex-col gap-6">
         <ImportPanel
+          shared={shared}
           onImported={({ draft: values }) =>
             setDraft((current) => ({ values, version: current.version + 1 }))
           }

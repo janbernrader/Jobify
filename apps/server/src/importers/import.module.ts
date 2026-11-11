@@ -8,5 +8,6 @@ import { ImportService } from './import.service.js';
   imports: [AiModule],
   controllers: [ImportController],
   providers: [ImportService, HttpFetcher],
+  exports: [ImportService],
 })
 export class ImportModule {}

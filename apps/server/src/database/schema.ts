@@ -62,6 +62,27 @@ export const sessions = sqliteTable(
 );
 
 /**
+ * A personal access token: how something that cannot hold a session cookie signs in as the
+ * user, such as the iOS shortcut that shares a posting to Jobify. As for sessions, only the
+ * token's SHA-256 hash is stored; the token itself is shown once, when it is created.
+ */
+export const apiTokens = sqliteTable(
+  'api_tokens',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(),
+    /** What the user called it, e.g. "iPhone shortcut". */
+    name: text('name').notNull(),
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp_ms' }),
+    createdAt: timestamps.createdAt,
+  },
+  (table) => [index('api_tokens_user_idx').on(table.userId)],
+);
+
+/**
  * One job search, from starting to look until it ends. Every job belongs to a hunt, so a new
  * search starts with a clean list while earlier ones stay available with their stats.
  */
@@ -273,6 +294,7 @@ export const settings = sqliteTable('settings', {
 });
 
 export type User = typeof users.$inferSelect;
+export type ApiToken = typeof apiTokens.$inferSelect;
 export type JobHunt = typeof jobHunts.$inferSelect;
 export type Job = typeof jobs.$inferSelect;
 export type NewJob = typeof jobs.$inferInsert;

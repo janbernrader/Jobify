@@ -15,6 +15,7 @@ import { JobsModule } from './jobs/jobs.module.js';
 import { LogsController } from './logging/logs.controller.js';
 import { SearchModule } from './search/search.module.js';
 import { SettingsModule } from './settings/settings.module.js';
+import { ShareModule } from './share/share.module.js';
 import { StatsModule } from './stats/stats.module.js';
 import { TagsModule } from './tags/tags.module.js';
 
@@ -32,6 +33,7 @@ import { TagsModule } from './tags/tags.module.js';
     ImportModule,
     AiModule,
     SearchModule,
+    ShareModule,
     StatsModule,
     BackupModule,
     // Serves the built React app; client-side routes fall back to index.html.

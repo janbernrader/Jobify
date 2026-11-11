@@ -575,6 +575,18 @@ export interface Preferences {
   defaultCurrency: string;
 }
 
+/** A personal access token, as listed. The token itself is only in the create response. */
+export interface ApiToken {
+  id: number;
+  name: string;
+  lastUsedAt: string | null;
+  createdAt: string;
+}
+
+export interface NewApiToken extends ApiToken {
+  token: string;
+}
+
 export type UserRole = 'admin' | 'user';
 
 export interface User {

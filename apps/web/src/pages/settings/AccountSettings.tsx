@@ -14,6 +14,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Alert, errorText } from '../../components/ui/feedback';
 import { Field, Input, Textarea } from '../../components/ui/fields';
+import { ShareCard } from './ShareCard';
 
 export function AccountSettings() {
   const profile = useProfile();
@@ -24,6 +25,7 @@ export function AccountSettings() {
       {preferences.data && <DefaultsCard preferences={preferences.data} />}
       <PasswordCard />
       {profile.data && <ProfileCard profile={profile.data} />}
+      <ShareCard />
     </div>
   );
 }

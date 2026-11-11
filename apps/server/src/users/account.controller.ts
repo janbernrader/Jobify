@@ -2,9 +2,12 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -13,6 +16,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CreateApiTokenDto } from '../auth/api-token.dto.js';
+import { ApiTokensService } from '../auth/api-tokens.service.js';
 import { CurrentUser, type AuthenticatedRequest } from '../auth/decorators.js';
 import { SessionsService } from '../auth/sessions.service.js';
 import { PreferencesDto } from './preferences.dto.js';
@@ -33,6 +38,7 @@ export class AccountController {
   constructor(
     private readonly users: UsersService,
     private readonly sessions: SessionsService,
+    private readonly tokens: ApiTokensService,
   ) {}
 
   @Get()
@@ -77,6 +83,23 @@ export class AccountController {
   parseResume(@UploadedFile() file?: UploadedResume) {
     if (!file?.buffer?.length) throw new BadRequestException('Choose a file to upload.');
     return extractResumeText(file.buffer);
+  }
+
+  @Get('tokens')
+  listTokens(@CurrentUser() user: PublicUser) {
+    return this.tokens.list(user.id);
+  }
+
+  /** Creates a personal access token. The token itself is in this response and nowhere else. */
+  @Post('tokens')
+  createToken(@CurrentUser() user: PublicUser, @Body() dto: CreateApiTokenDto) {
+    return this.tokens.create(user.id, dto.name);
+  }
+
+  @Delete('tokens/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  revokeToken(@CurrentUser() user: PublicUser, @Param('id', ParseIntPipe) id: number) {
+    return this.tokens.revoke(user.id, id);
   }
 
   @Get('preferences')

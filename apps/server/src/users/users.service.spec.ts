@@ -108,6 +108,7 @@ describe('UsersService', () => {
     await expect(users.getPreferences(alice.id)).resolves.toEqual({
       dashboard: { order: [...DASHBOARD_CARDS], hidden: [] },
       hiddenJobColumns: [],
+      defaultCurrency: '',
     });
 
     const saved = await users.updatePreferences(alice.id, {
@@ -150,6 +151,22 @@ describe('UsersService', () => {
       plainToInstance(PreferencesDto, { hiddenJobColumns: ['tags'] }),
     );
     expect((await users.getPreferences(alice.id)).dashboard.hidden).toEqual(['weekly']);
+  });
+
+  it('keeps the default currency as a code, and lets it be cleared', async () => {
+    const alice = await users.create({ username: 'alice', password: 'password123' });
+    expect((await users.getPreferences(alice.id)).defaultCurrency).toBe('');
+
+    await users.updatePreferences(alice.id, { defaultCurrency: ' eur ' });
+    expect((await users.getPreferences(alice.id)).defaultCurrency).toBe('EUR');
+
+    // Saving something else leaves it alone.
+    await users.updatePreferences(alice.id, { hiddenJobColumns: ['salary'] });
+    expect((await users.getPreferences(alice.id)).defaultCurrency).toBe('EUR');
+
+    // An empty string is a choice, not a missing field: it means no default.
+    await users.updatePreferences(alice.id, { defaultCurrency: '' });
+    expect((await users.getPreferences(alice.id)).defaultCurrency).toBe('');
   });
 
   it('ignores null settings, which @IsOptional lets through', async () => {

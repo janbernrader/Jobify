@@ -13,7 +13,12 @@ import { SettingsService } from '../settings/settings.service.js';
 import { hashPassword, verifyPassword } from './passwords.js';
 import { EMPTY_PROFILE, type ProfileDto } from './profile.dto.js';
 import type { PreferencesDto } from './preferences.dto.js';
-import { JOB_COLUMNS, normalizeDashboard, type UserPreferences } from './preferences.js';
+import {
+  JOB_COLUMNS,
+  normalizeCurrency,
+  normalizeDashboard,
+  type UserPreferences,
+} from './preferences.js';
 import type { CreateUserDto, UpdateUserDto } from './users.dto.js';
 
 /** A user as exposed by the API: never includes the password hash or profile. */
@@ -161,6 +166,7 @@ export class UsersService {
       hiddenJobColumns: (user.preferences.hiddenJobColumns ?? []).filter((column) =>
         JOB_COLUMNS.includes(column),
       ),
+      defaultCurrency: normalizeCurrency(user.preferences.defaultCurrency),
     };
   }
 
@@ -171,6 +177,7 @@ export class UsersService {
     );
     const preferences = { ...(await this.getPreferences(id)), ...sent };
     preferences.dashboard = normalizeDashboard(preferences.dashboard);
+    preferences.defaultCurrency = normalizeCurrency(preferences.defaultCurrency);
     await this.db.update(users).set({ preferences }).where(eq(users.id, id));
     return preferences;
   }

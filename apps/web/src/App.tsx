@@ -10,6 +10,8 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { SetupPage } from './pages/auth/SetupPage';
 import { BoardPage } from './pages/BoardPage';
+import { CompaniesPage } from './pages/CompaniesPage';
+import { CompanyDetailPage } from './pages/CompanyDetailPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { EditJobPage } from './pages/EditJobPage';
 import { HuntsPage } from './pages/HuntsPage';
@@ -46,6 +48,8 @@ const router = createBrowserRouter([
           { path: 'jobs/:id/edit', element: <EditJobPage /> },
           { path: 'board', element: <BoardPage />, handle: { fullWidth: true, hunt: true } },
           { path: 'timeline', element: <TimelinePage />, handle: { hunt: true } },
+          { path: 'companies', element: <CompaniesPage /> },
+          { path: 'companies/:id', element: <CompanyDetailPage /> },
           { path: 'hunts', element: <HuntsPage /> },
           {
             path: 'settings',

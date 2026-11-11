@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { CompaniesService } from '../companies/companies.service.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
 import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
@@ -19,6 +20,7 @@ describe('TagsService', () => {
       database.db,
       new HuntsService(database.db, createTestFiles(database.db)),
       createTestFiles(database.db),
+      new CompaniesService(database.db),
     );
     tags = new TagsService(database.db);
     alice = await database.createUser('alice');

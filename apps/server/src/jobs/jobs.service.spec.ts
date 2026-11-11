@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { today } from '../common/dates.js';
+import { CompaniesService } from '../companies/companies.service.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
 import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
@@ -16,7 +17,12 @@ describe('JobsService', () => {
   beforeEach(async () => {
     database = await createTestDatabase();
     hunts = new HuntsService(database.db, createTestFiles(database.db));
-    jobs = new JobsService(database.db, hunts, createTestFiles(database.db));
+    jobs = new JobsService(
+      database.db,
+      hunts,
+      createTestFiles(database.db),
+      new CompaniesService(database.db),
+    );
     alice = await database.createUser('alice');
     bob = await database.createUser('bob');
   });

@@ -1,6 +1,7 @@
 import {
   Binoculars,
   BriefcaseBusiness,
+  Building2,
   Columns3,
   GanttChart,
   LayoutDashboard,
@@ -32,6 +33,7 @@ const NAVIGATION = [
   { to: '/search', label: 'Find jobs', icon: Search, end: true },
   { to: '/board', label: 'Board', icon: Columns3, end: true },
   { to: '/timeline', label: 'Timeline', icon: GanttChart, end: true },
+  { to: '/companies', label: 'Companies', icon: Building2, end: false },
   { to: '/hunts', label: 'Job hunts', icon: Binoculars, end: true },
   { to: '/settings', label: 'Settings', icon: Settings, end: false },
 ];

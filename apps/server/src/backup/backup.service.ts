@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { asc, eq } from 'drizzle-orm';
 import { DATABASE, type Database, type Executor } from '../database/database.module.js';
 import { jobChatMessages, jobEvents, jobHunts, jobs, tags, type Job } from '../database/schema.js';
+import { CompaniesService } from '../companies/companies.service.js';
 import { HuntsService } from '../hunts/hunts.service.js';
 import { BACKUP_VERSION, type BackupDto, type BackupHuntDto } from './backup.dto.js';
 import { toCsv } from './csv.js';
@@ -39,6 +40,7 @@ export class BackupService {
   constructor(
     @Inject(DATABASE) private readonly db: Database,
     private readonly hunts: HuntsService,
+    private readonly companies: CompaniesService,
   ) {}
 
   async exportJson(userId: number) {
@@ -124,9 +126,17 @@ export class BackupService {
 
       for (const { events = [], chat = [], createdAt, hunt, ...job } of backup.jobs) {
         const huntId = await huntIdFor(hunt);
+        const company = await this.companies.forName(userId, job.company, tx);
         const [inserted] = await tx
           .insert(jobs)
-          .values({ ...job, userId, huntId, ...(createdAt && { createdAt: new Date(createdAt) }) })
+          .values({
+            ...job,
+            userId,
+            huntId,
+            company: company.name,
+            companyId: company.id,
+            ...(createdAt && { createdAt: new Date(createdAt) }),
+          })
           .returning({ id: jobs.id });
         if (events.length > 0) {
           const rows = events.map((event) => ({

@@ -12,6 +12,9 @@ import type {
   AttachmentKind,
   AuthStatus,
   ChatMessage,
+  Company,
+  CompanyDetail,
+  CompanyInput,
   EventInput,
   EventUpdate,
   HuntInput,
@@ -52,6 +55,8 @@ export const queryKeys = {
   huntSummaries: ['stats', 'hunts'] as const,
   hunts: ['hunts'] as const,
   tags: ['tags'] as const,
+  companies: ['companies'] as const,
+  company: (id: number) => ['companies', id] as const,
   timeline: (includeArchived: boolean, huntId: number | null) =>
     ['jobs', 'timeline', includeArchived, huntId] as const,
   aiSettings: ['ai', 'settings'] as const,
@@ -309,6 +314,8 @@ function useJobsChanged() {
     void queryClient.invalidateQueries({ queryKey: queryKeys.hunts });
     // Tags carry a job count too, and a job can bring a new tag.
     void queryClient.invalidateQueries({ queryKey: queryKeys.tags });
+    // So do companies, and a job can bring a new one of those as well.
+    void queryClient.invalidateQueries({ queryKey: queryKeys.companies });
   };
 }
 
@@ -357,6 +364,7 @@ export function useDeleteJob() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       void queryClient.invalidateQueries({ queryKey: queryKeys.stats });
       void queryClient.invalidateQueries({ queryKey: queryKeys.hunts });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.companies });
     },
   });
 }
@@ -394,6 +402,55 @@ export function useDeleteEvent(jobId: number) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
       void queryClient.invalidateQueries({ queryKey: queryKeys.stats });
     },
+  });
+}
+
+export function useCompanies() {
+  return useQuery({
+    queryKey: queryKeys.companies,
+    queryFn: () => api.get<Company[]>('/companies'),
+  });
+}
+
+export function useCompany(id: number) {
+  return useQuery({
+    queryKey: queryKeys.company(id),
+    queryFn: () => api.get<CompanyDetail>(`/companies/${id}`),
+    enabled: Number.isFinite(id),
+  });
+}
+
+/** Companies change with the jobs that belong to them, so both are refreshed together. */
+function useCompanyChange() {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.jobs });
+  };
+}
+
+export function useCreateCompany() {
+  const changed = useCompanyChange();
+  return useMutation({
+    mutationFn: (input: CompanyInput) => api.post<CompanyDetail>('/companies', input),
+    onSuccess: changed,
+  });
+}
+
+export function useUpdateCompany() {
+  const changed = useCompanyChange();
+  return useMutation({
+    mutationFn: ({ id, changes }: { id: number; changes: Partial<CompanyInput> }) =>
+      api.patch<CompanyDetail>(`/companies/${id}`, changes),
+    onSuccess: changed,
+  });
+}
+
+export function useDeleteCompany() {
+  const changed = useCompanyChange();
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/companies/${id}`),
+    onSuccess: changed,
   });
 }
 

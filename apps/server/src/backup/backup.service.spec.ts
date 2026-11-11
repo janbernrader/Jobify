@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { jobChatMessages } from '../database/schema.js';
+import { CompaniesService } from '../companies/companies.service.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
 import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
@@ -20,8 +21,13 @@ describe('BackupService', () => {
   beforeEach(async () => {
     database = await createTestDatabase();
     hunts = new HuntsService(database.db, createTestFiles(database.db));
-    jobs = new JobsService(database.db, hunts, createTestFiles(database.db));
-    backup = new BackupService(database.db, hunts);
+    jobs = new JobsService(
+      database.db,
+      hunts,
+      createTestFiles(database.db),
+      new CompaniesService(database.db),
+    );
+    backup = new BackupService(database.db, hunts, new CompaniesService(database.db));
     alice = await database.createUser('alice');
     bob = await database.createUser('bob');
   });

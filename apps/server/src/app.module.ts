@@ -3,6 +3,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { AiModule } from './ai/ai.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BackupModule } from './backup/backup.module.js';
+import { CompaniesModule } from './companies/companies.module.js';
 import { ConfigModule } from './config/config.module.js';
 import { loadConfig } from './config/configuration.js';
 import { DatabaseModule } from './database/database.module.js';
@@ -24,6 +25,7 @@ import { TagsModule } from './tags/tags.module.js';
     SettingsModule,
     AuthModule,
     HuntsModule,
+    CompaniesModule,
     FilesModule,
     JobsModule,
     TagsModule,

@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { CompaniesService } from '../companies/companies.service.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
 import { JobsService } from '../jobs/jobs.service.js';
@@ -31,7 +32,7 @@ describe('FilesService', () => {
     root = mkdtempSync(path.join(tmpdir(), 'jobify-files-'));
     files = createTestFiles(database.db, root);
     hunts = new HuntsService(database.db, files);
-    jobs = new JobsService(database.db, hunts, files);
+    jobs = new JobsService(database.db, hunts, files, new CompaniesService(database.db));
     alice = await database.createUser('alice');
     bob = await database.createUser('bob');
     aliceJob = (await jobs.create(alice, { title: 'Engineer', company: 'Acme' })).id;

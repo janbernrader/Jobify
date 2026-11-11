@@ -9,6 +9,7 @@ import { and, asc, desc, eq, getTableColumns, inArray, like, or, sql, type SQL }
 import { today } from '../common/dates.js';
 import { DATABASE, type Database, type Executor } from '../database/database.module.js';
 import { jobEvents, jobHunts, jobs, type Job, type JobEvent } from '../database/schema.js';
+import { CompaniesService } from '../companies/companies.service.js';
 import { FilesService } from '../files/files.service.js';
 import { HuntsService } from '../hunts/hunts.service.js';
 import type { JobStatus } from './job.constants.js';
@@ -66,6 +67,7 @@ export class JobsService {
     @Inject(DATABASE) private readonly db: Database,
     private readonly hunts: HuntsService,
     private readonly files: FilesService,
+    private readonly companies: CompaniesService,
   ) {}
 
   async list(userId: number, query: QueryJobsDto): Promise<JobSummary[]> {
@@ -229,9 +231,19 @@ export class JobsService {
     const huntId = await this.hunts.forNewJob(userId, values.huntId ?? undefined);
 
     const id = await this.db.transaction(async (tx) => {
+      // Every job belongs to a company, created the first time its name is used.
+      const company = await this.companies.forName(userId, values.company, tx);
       const [job] = await tx
         .insert(jobs)
-        .values({ ...values, userId, huntId, status, appliedOn })
+        .values({
+          ...values,
+          userId,
+          huntId,
+          status,
+          appliedOn,
+          company: company.name,
+          companyId: company.id,
+        })
         .returning({ id: jobs.id });
       await tx
         .insert(jobEvents)
@@ -255,6 +267,12 @@ export class JobsService {
     }
 
     await this.db.transaction(async (tx) => {
+      if (changes.company !== undefined) {
+        // Typing another name moves the job to that company, creating it if it is new.
+        const company = await this.companies.forName(userId, changes.company, tx);
+        changes.company = company.name;
+        Object.assign(changes, { companyId: company.id });
+      }
       await tx.update(jobs).set(changes).where(eq(jobs.id, id));
       if (statusChanged) {
         await tx.insert(jobEvents).values({

@@ -1,5 +1,6 @@
 import { Eye, Pencil } from 'lucide-react';
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { useCompanies } from '../api/hooks';
 import {
   EMPLOYMENT_TYPES,
   JOB_STATUSES,
@@ -154,6 +155,8 @@ export function JobForm({
 }: JobFormProps) {
   const [values, setValues] = useState(() => toFormValues(initial));
   const [previewDescription, setPreviewDescription] = useState(false);
+  // Suggestions only: the company is still saved by name, and a new one is created on save.
+  const { data: companies = [] } = useCompanies();
 
   const set = <K extends keyof FormValues>(key: K, value: FormValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }));
@@ -187,8 +190,17 @@ export function JobForm({
         <Field label="Job title">
           {(id) => <Input id={id} required maxLength={300} {...bind('title')} />}
         </Field>
-        <Field label="Company">
-          {(id) => <Input id={id} required maxLength={300} {...bind('company')} />}
+        <Field label="Company" hint="Typing a new name starts a company; an existing one joins it.">
+          {(id) => (
+            <>
+              <Input id={id} required maxLength={300} list="known-companies" {...bind('company')} />
+              <datalist id="known-companies">
+                {companies.map((company) => (
+                  <option key={company.id} value={company.name} />
+                ))}
+              </datalist>
+            </>
+          )}
         </Field>
         <Field label="Posting URL">
           {(id) => <Input id={id} type="url" placeholder="https://" {...bind('url')} />}

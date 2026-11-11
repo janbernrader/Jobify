@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { CompaniesService } from '../companies/companies.service.js';
 import { createTestDatabase, type TestDatabase } from '../database/testing.js';
 import { createTestFiles } from '../files/testing.js';
 import { HuntsService } from '../hunts/hunts.service.js';
@@ -23,7 +24,12 @@ describe('ChatService', () => {
   beforeEach(async () => {
     database = await createTestDatabase();
     const hunts = new HuntsService(database.db, createTestFiles(database.db));
-    jobs = new JobsService(database.db, hunts, createTestFiles(database.db));
+    jobs = new JobsService(
+      database.db,
+      hunts,
+      createTestFiles(database.db),
+      new CompaniesService(database.db),
+    );
     users = new UsersService(database.db, new SettingsService(database.db), hunts);
     requests = [];
     const ai = {

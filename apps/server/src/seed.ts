@@ -15,6 +15,7 @@ import { and, eq } from 'drizzle-orm';
 import { loadConfig } from './config/configuration.js';
 import { openDatabase, type Database } from './database/database.js';
 import { jobEvents, jobHunts, jobs, users } from './database/schema.js';
+import { CompaniesService } from './companies/companies.service.js';
 import { FilesService } from './files/files.service.js';
 import { HuntsService } from './hunts/hunts.service.js';
 import type { JobStatus } from './jobs/job.constants.js';
@@ -393,13 +394,15 @@ async function seedHunt(
     let appliedOn: string | undefined;
     const finished = !['saved', 'applied', 'screening', 'interviewing', 'offer'].includes(status);
 
+    const company = await new CompaniesService(db).forName(userId, posting.company);
     const [job] = await db
       .insert(jobs)
       .values({
         userId,
         huntId,
         title: posting.title,
-        company: posting.company,
+        company: company.name,
+        companyId: company.id,
         location: posting.location,
         workplaceType: posting.workplaceType,
         employmentType: 'full_time',

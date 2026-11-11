@@ -160,7 +160,16 @@ function JobHeader({
         <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
           <span className="flex items-center gap-1.5">
             <Building2 className="size-4" aria-hidden />
-            {job.company}
+            {job.companyId ? (
+              <Link
+                to={`/companies/${job.companyId}`}
+                className="hover:text-zinc-800 hover:underline dark:hover:text-zinc-200"
+              >
+                {job.company}
+              </Link>
+            ) : (
+              job.company
+            )}
           </span>
           {(job.location || job.workplaceType) && (
             <span className="flex items-center gap-1.5">

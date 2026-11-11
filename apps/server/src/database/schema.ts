@@ -87,6 +87,29 @@ export const jobHunts = sqliteTable(
   ],
 );
 
+/**
+ * An employer or a recruitment agency the user deals with. Companies outlive a job hunt, so
+ * they are per user rather than per hunt, and a job's `company` text is kept in step with the
+ * name here rather than replaced by it (see `CompaniesService`).
+ */
+export const companies = sqliteTable(
+  'companies',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    website: text('website'),
+    /** A recruitment agency rather than an employer: the same record with a different badge. */
+    isAgency: integer('is_agency', { mode: 'boolean' }).notNull().default(false),
+    /** What the user knows about them, in Markdown. */
+    about: text('about'),
+    ...timestamps,
+  },
+  (table) => [uniqueIndex('companies_user_name_idx').on(table.userId, table.name)],
+);
+
 export const jobs = sqliteTable(
   'jobs',
   {
@@ -102,7 +125,17 @@ export const jobs = sqliteTable(
      */
     huntId: integer('hunt_id').references(() => jobHunts.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
+    /**
+     * The company's name, kept as text so every list, chart and backup reads one column. It
+     * follows `companyId`: the services write it whenever the link changes, and a rename
+     * updates every job of that company.
+     */
     company: text('company').notNull(),
+    /**
+     * Nullable for jobs that predate companies (and for a job whose company was deleted out
+     * from under it). `CompaniesService.adoptJobs` fills those in on startup.
+     */
+    companyId: integer('company_id').references(() => companies.id, { onDelete: 'set null' }),
     location: text('location'),
     workplaceType: text('workplace_type', { enum: WORKPLACE_TYPES }),
     employmentType: text('employment_type', { enum: EMPLOYMENT_TYPES }),
@@ -143,6 +176,7 @@ export const jobs = sqliteTable(
     index('jobs_hunt_idx').on(table.huntId),
     index('jobs_status_idx').on(table.status),
     index('jobs_company_idx').on(table.company),
+    index('jobs_company_id_idx').on(table.companyId),
   ],
 );
 
@@ -247,3 +281,4 @@ export type NewJobEvent = typeof jobEvents.$inferInsert;
 export type JobChatMessage = typeof jobChatMessages.$inferSelect;
 export type Tag = typeof tags.$inferSelect;
 export type Attachment = typeof attachments.$inferSelect;
+export type Company = typeof companies.$inferSelect;

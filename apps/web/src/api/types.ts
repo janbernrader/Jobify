@@ -82,6 +82,8 @@ export interface JobSummary {
   huntId: number | null;
   title: string;
   company: string;
+  /** The company this job belongs to. Null only for jobs written before companies existed. */
+  companyId: number | null;
   location: string | null;
   workplaceType: WorkplaceType | null;
   employmentType: EmploymentType | null;
@@ -470,6 +472,42 @@ export interface ResumeUpload {
   text: string;
   format: 'pdf' | 'docx' | 'text';
   truncated: boolean;
+}
+
+/** An employer or agency, with how much is going on there. Mirrors `companies/`. */
+export interface Company {
+  id: number;
+  name: string;
+  website: string | null;
+  isAgency: boolean;
+  about: string | null;
+  jobCount: number;
+  openCount: number;
+  lastActivityAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CompanyJob {
+  id: number;
+  title: string;
+  status: JobStatus;
+  appliedOn: string | null;
+  archived: boolean;
+  updatedAt: string;
+  hunt: { id: number; name: string; endedOn: string | null } | null;
+}
+
+export interface CompanyDetail extends Company {
+  jobs: CompanyJob[];
+}
+
+/** Writable company fields. */
+export interface CompanyInput {
+  name: string;
+  website?: string | null;
+  isAgency?: boolean;
+  about?: string | null;
 }
 
 /** Mirrors `files/file.constants.ts` on the server. */

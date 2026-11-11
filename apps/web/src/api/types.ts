@@ -571,6 +571,8 @@ export type JobColumn = (typeof JOB_COLUMNS)[number];
 export interface Preferences {
   dashboard: DashboardLayout;
   hiddenJobColumns: JobColumn[];
+  /** Three-letter code a new job's salary starts with, or empty for none. */
+  defaultCurrency: string;
 }
 
 export type UserRole = 'admin' | 'user';

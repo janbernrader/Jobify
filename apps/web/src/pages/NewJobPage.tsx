@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { useCreateJob, useViewedHunt } from '../api/hooks';
+import { useCreateJob, usePreferences, useViewedHunt } from '../api/hooks';
 import type { JobDraft, JobInput } from '../api/types';
 import { DuplicateJobDialog, duplicatesFromError } from '../components/DuplicateJobDialog';
 import { ImportPanel } from '../components/ImportPanel';
@@ -19,6 +19,8 @@ export function NewJobPage() {
     values: handed ?? {},
     version: 0,
   });
+  // Only for jobs added by hand or from a posting that names no currency of its own.
+  const defaultCurrency = usePreferences().data?.defaultCurrency;
   // The input the server refused as a duplicate, kept so "Add anyway" can resend it.
   const [pending, setPending] = useState<JobInput | null>(null);
   const duplicates = pending ? duplicatesFromError(createJob.error) : null;
@@ -46,9 +48,12 @@ export function NewJobPage() {
           }
         />
         <JobForm
-          // Remount with fresh values after each import.
-          key={draft.version}
-          initial={draft.values}
+          // Remount with fresh values after each import, and once preferences arrive.
+          key={`${draft.version}-${defaultCurrency ?? ''}`}
+          initial={{
+            ...draft.values,
+            salaryCurrency: draft.values.salaryCurrency || defaultCurrency,
+          }}
           submitLabel="Save job"
           submitting={createJob.isPending}
           error={

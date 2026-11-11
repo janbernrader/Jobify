@@ -34,12 +34,23 @@ export interface UserPreferences {
   dashboard: DashboardLayout;
   /** Stored as the hidden ones so columns added later show up by default. */
   hiddenJobColumns: JobColumn[];
+  /**
+   * The currency a new job starts with, as a three-letter code, or empty for none. A posting
+   * that names its own currency keeps it; this only fills the gap.
+   */
+  defaultCurrency: string;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   dashboard: { order: [...DASHBOARD_CARDS], hidden: [] },
   hiddenJobColumns: [],
+  defaultCurrency: '',
 };
+
+/** Currency codes are stored as the job form writes them: upper case, three letters at most. */
+export function normalizeCurrency(value: string | undefined): string {
+  return (value ?? '').trim().toUpperCase().slice(0, 3);
+}
 
 /**
  * Cleans up a stored layout: drops cards that no longer exist, removes duplicates and appends

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsIn, IsOptional, ValidateNested } from 'class-validator';
+import { IsArray, IsIn, IsOptional, IsString, Matches, ValidateNested } from 'class-validator';
 import {
   DASHBOARD_CARDS,
   JOB_COLUMNS,
@@ -28,4 +28,10 @@ export class PreferencesDto {
   @IsArray()
   @IsIn(JOB_COLUMNS, { each: true })
   hiddenJobColumns?: JobColumn[];
+
+  /** A currency code such as EUR, or empty to go back to no default. */
+  @IsOptional()
+  @IsString()
+  @Matches(/^[A-Za-z]{0,3}$/, { message: 'defaultCurrency must be a currency code, such as EUR' })
+  defaultCurrency?: string;
 }

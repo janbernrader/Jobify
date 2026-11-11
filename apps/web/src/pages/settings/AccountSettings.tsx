@@ -2,11 +2,13 @@ import { useState, type FormEvent } from 'react';
 import {
   useChangePassword,
   useCurrentUser,
+  usePreferences,
   useProfile,
   useUpdateAccount,
+  useUpdatePreferences,
   useUpdateProfile,
 } from '../../api/hooks';
-import type { Profile } from '../../api/types';
+import type { Preferences, Profile } from '../../api/types';
 import { ResumeField } from '../../components/ResumeField';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader } from '../../components/ui/Card';
@@ -15,12 +17,59 @@ import { Field, Input, Textarea } from '../../components/ui/fields';
 
 export function AccountSettings() {
   const profile = useProfile();
+  const preferences = usePreferences();
   return (
     <div className="flex flex-col gap-6">
       <AccountCard />
+      {preferences.data && <DefaultsCard preferences={preferences.data} />}
       <PasswordCard />
       {profile.data && <ProfileCard profile={profile.data} />}
     </div>
+  );
+}
+
+function DefaultsCard({ preferences }: { preferences: Preferences }) {
+  const [currency, setCurrency] = useState(preferences.defaultCurrency);
+  const update = useUpdatePreferences();
+
+  const save = (event: FormEvent) => {
+    event.preventDefault();
+    update.mutate({ defaultCurrency: currency.trim().toUpperCase() });
+  };
+
+  return (
+    <Card>
+      <CardHeader title="Default values" description="What a job you add starts with." />
+      <form onSubmit={save} className="flex flex-col gap-4 p-5">
+        <Field
+          label="Currency"
+          hint="Used when a posting does not name one of its own. Leave it empty for none."
+        >
+          {(id) => (
+            <Input
+              id={id}
+              maxLength={3}
+              placeholder="USD"
+              className="w-28 uppercase"
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value)}
+            />
+          )}
+        </Field>
+        {update.isError && <Alert>{errorText(update.error)}</Alert>}
+        {update.isSuccess && <Alert tone="success">Saved.</Alert>}
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            variant="primary"
+            loading={update.isPending}
+            disabled={currency.trim().toUpperCase() === preferences.defaultCurrency}
+          >
+            Save
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }
 
